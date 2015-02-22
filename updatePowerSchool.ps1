@@ -13,7 +13,8 @@ write-output "set TERMOUT off" | out-file -encoding Default -append C:\SISSync\u
 write-output "set TRIMSPOOL on" | out-file -encoding Default -append C:\SISSync\updatePowerSchool.sql
 write-output "alter session set nls_date_format = 'mm/dd/yyyy';" | out-file -encoding Default -append C:\SISSync\updatePowerSchool.sql
 
-$students = Get-ADUser -LDAPFilter "((employeeID=*)(!employeeID=9999))" -Properties employeeID
+#Find any users with employeeID set and export them
+$students = Get-ADUser -LDAPFilter "(employeeID=*)" -Properties employeeID
 foreach  ($student in $students) {
 	$samname = $student.sAMAccountName
 	$studentid = $student.employeeID
