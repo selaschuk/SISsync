@@ -148,7 +148,7 @@ foreach ($sisline in $sisfile) {
 	#Add user to site student group and grad year group also a good place to add any other groups you may require
 	#This assumes a security group with the site abbreviation-Students exists and a group called Grad#### exists
 	#It doesn't check to see if the user is already a part of these groups, so it will often print an error stating it can't add them because they already exist
-	$studentgroup = $siteabbr.Get_Item("$company") + "-Students"
+	$studentgroup = $siteabbr.Get_Item($sisline.schoolid) + "-Students"
 	$gradgroup = "Grad" + $description
 	Add-ADGroupMember $studentgroup $user
 	Add-ADGroupMember $gradgroup $user
