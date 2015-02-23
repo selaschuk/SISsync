@@ -20,6 +20,8 @@ foreach ($sisline in $sisfile) {
 	$sAMAccountName = $sAMAccountName.replace(" ","")
 	$sAMAccountName = $sAMAccountName.replace("..",".")
 	$sAMAccountName = $sAMAccountName.replace("'","")
+	#Truncate to 19 characters to leave room for the number if we need one
+	$sAMAccountName = $sAMAccountName.substring(0,19)
 	#Set the displayname for the account in AD example below is firstname space lastname
 	$name = $sisline.givenName + " " + $sisline.sn
 	#Set a password for the account, example below takes their student number and assigns it as their initial password
