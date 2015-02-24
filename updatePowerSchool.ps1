@@ -18,9 +18,12 @@ $students = Get-ADUser -LDAPFilter "(employeeID=*)" -Properties employeeID
 foreach  ($student in $students) {
 	$samname = $student.sAMAccountName
 	$studentid = $student.employeeID
-	write-output "UPDATE Students" | out-file -encoding Default -append C:\SISSync\updatePowerSchool.sql
-	write-output "SET Student_AllowWebAccess = 1, LDAPEnabled = 1, Student_Web_ID = '$samname', AllowWebAccess = 1, Web_ID = Student_Number, Web_Password = to_char(DOB, 'mm/dd/yyyy')" | out-file -encoding Default -append C:\SISSync\updatePowerSchool.sql
-	write-output "WHERE Student_Number = $studentid;" | out-file -encoding Default -append C:\SISSync\updatePowerSchool.sql
+	write-output "UPDATE Students" | out-file -encoding Default -append C:\PowerSchoolSync\updateStudentUsernames.sql
+	write-output "SET Student_AllowWebAccess = 1, LDAPEnabled = 1, Student_Web_ID = '$samname'" | out-file -encoding Default -append C:\PowerSchoolSync\updateStudentUsernames.sql
+	write-output "WHERE Student_Number = $studentid;" | out-file -encoding Default -append C:\PowerSchoolSync\updateStudentUsernames.sql
+	write-output "UPDATE Students" | out-file -encoding Default -append C:\PowerSchoolSync\updateStudentUsernames.sql
+	write-output "SET AllowWebAccess = 1, Web_ID = Student_Number, Web_Password = to_char(DOB, 'mm/dd/yyyy')" | out-file -encoding Default -append C:\PowerSchoolSync\updateStudentUsernames.sql
+	write-output "WHERE Student_Number = $studentid AND Web_Password IS NULL;" | out-file -encoding Default -append C:\PowerSchoolSync\updateStudentUsernames.sql
 }
 
 write-output "exit;" | out-file -encoding Default -append C:\SISSync\updatePowerSchool.sql
