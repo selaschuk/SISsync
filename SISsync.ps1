@@ -1,3 +1,4 @@
+										  
 # Import the Active Directory functions
 Import-Module ActiveDirectory
 
@@ -15,20 +16,26 @@ $sisfile = Import-Csv -delimiter "`t" -Path C:\SISSync\SISsync.txt -Header "sn",
 #Start Processing per file line
 foreach ($sisline in $sisfile) {
 	#Set the username example below is firstname.lastname
-	$sAMAccountName = $sisline.givenName + "." + $sisline.sn
+	[string]$sAMAccountName = $sisline.givenName + "." + $sisline.sn
 	#tidy up samaccountName to make it more valid (no spaces, double periods or apostrophies. Helpful for when there's data entry 'issues' in your source
 	$sAMAccountName = $sAMAccountName.replace(" ","")
 	$sAMAccountName = $sAMAccountName.replace("..",".")
 	$sAMAccountName = $sAMAccountName.replace("'","")
 	#Truncate to 19 characters to leave room for the number if we need one
-	$sAMAccountName = $sAMAccountName.substring(0,19)
+	$sAMAccountName = $sAMAccountName.subString(0, [System.Math]::Min(19, $sAMAccountName.Length))
+	$sAMAccountName = [Text.Encoding]::ASCII.GetString([Text.Encoding]::GetEncoding("Cyrillic").GetBytes($sAMAccountName))
 	#Set the displayname for the account in AD example below is firstname space lastname
+							  
 	$name = $sisline.givenName + " " + $sisline.sn
 	#Set a password for the account, example below takes their student number and assigns it as their initial password
 	$password = ConvertTo-SecureString -AsPlainText $sisline.studentid -Force
 	#Set the UPN for the account for most instances, should be AD Account name + @AD.FQDN
+													   
+									   
+											
 	$userPrincipalName = $sAMAccountName + "@school.local"
 	#Set the mail attribute for the account (if desired, usually helpful if you're synchronizing to Google Apps/Office 365)
+										  
 	$mail = $sAMAccountName + "@school.ca"
 	#Set name attributes
 	$givenName = $sisline.givenName
@@ -46,7 +53,7 @@ foreach ($sisline in $sisfile) {
 	$comment = $sAMAccountName + "@school.ca"
 	#Create a hashtable of all the "otherattributes" this is used when we create/update the user
 	$otherAttributes = @{'userPrincipalName' = "$userPrincipalName"; 'mail' = "$mail"; 'comment' = "$comment"; 'givenName' = "$givenName"; 'sn' = "$sn"; 'employeeID' = "$employeeID"; 'c' = "$c"; 'l' = "$l"; 'company' = "$company"; 'physicalDeliveryOfficeName' = "$physicalDeliveryOfficeName"; 'description' = "$description"}
-
+																						 
 	#recast description as a string because AD commands require it and it gets converted to int if it's all numeric.
 	$otherAttributes.description = [string]$otherAttributes.description
 
@@ -62,18 +69,22 @@ foreach ($sisline in $sisfile) {
 		#find a valid username
 		#This is probably the most inelegant backwards way of doing this, but it works. Feel free to improve
 		$i = 1
-		$sAMSearch = $sAMAccountName
-		while ((Get-ADUser -Filter {sAMAccountName -eq $sAMSearch}) -ne $null) {		
-			$sAMSearch = $sAMAccountName + $i
+		
+		while ((Get-ADUser -Filter {sAMAccountName -eq $sAMAccountName}) -ne $null) {		
+			$sAMAccountName = $sAMAccountName + $i
 			$i++
 		}
 		$i--
 		if ($i -ne 0) {
 		#name was taken, update constants to reflect new name containing number
 			$sAMAccountName = $sAMSearch
+											   
+																		   
 			$otherAttributes.Set_Item("userPrincipalName", $sAMAccountName + "@school.local")
+					
 			$otherAttributes.Set_Item("mail", $sAMAccountName + "@school.ca")
 			$otherAttributes.Set_Item("comment", $sAMAccountName + "@school.ca")
+			 
 			$name = $name + $i
 		}
 		#create user using $sAMAccountName and set attributes and assign it to the $user variable
@@ -84,20 +95,26 @@ foreach ($sisline in $sisfile) {
 		#find a valid username
 		#This is probably the most inelegant backwards way of doing this, but it works. Feel free to improve
 		$i = 1
-		$sAMSearch = $sAMAccountName
-		while ((Get-ADUser -Filter {sAMAccountName -eq $sAMSearch}) -ne $null) {		
-			$sAMSearch = $sAMAccountName + $i
+		
+		while ((Get-ADUser -Filter {sAMAccountName -eq $sAMAccountName -and employeeID -ne $employeeID}) -ne $null)
+		{
+			$sAMAccountName = $sAMAccountName + $i
 			$i++
 		}
 		$i--
+		$name = $givenName + " " + $sn  								  
 		if ($i -ne 0)
 		#need to update Name, sAMAccountName, UPN and email because of name collison  
 		{
 			$sAMAccountName = $sAMSearch
+											   
 			$otherAttributes.Add("sAMAccountName", $sAMAccountName)
 			$otherAttributes.Set_Item("userPrincipalName", $sAMAccountName + "@school.local")
+					
 			$otherAttributes.Set_Item("mail", $sAMAccountName + "@school.ca")
 			$otherAttributes.Set_Item("comment", $sAMAccountName + "@school.ca")
+			 
+																						  
 			$name = $name + $i
 		}
 		Rename-ADObject -Identity $user $name
@@ -120,6 +137,7 @@ foreach ($sisline in $sisfile) {
 	write-host $properdn
 	if ($user.DistinguishedName -notlike "*$properdn*")
 	{
+										   											  
 		Move-ADObject -Identity $user -TargetPath $path
 		$user = Get-ADUser -Filter {employeeID -eq $employeeID}
 	}
@@ -169,4 +187,3 @@ foreach  ($exportstudent in $exportstudents) {
 	$exportmail = $exportstudent.mail
 	write-output "$exportstudentid`t$exportsamname`t1`t1" | out-file  -Encoding Default -append C:\SISSync\UpdateSIS.txt
 }
-
