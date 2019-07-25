@@ -156,3 +156,17 @@ foreach ($sisline in $sisfile) {
 	Add-ADGroupMember $gradgroup $user
 
 }
+
+	#Now that we have everyone's account created, turn around and ship that info back to PowerSchool by making an importable tsv
+	#This file will be shipped to the PowerSchool Server, and imported using an AutoComm job
+$exportstudents = Get-ADUser -LDAPFilter "(&(objectCategory=person)(objectClass=user)(employeeID=*))" -Properties employeeID,mail
+write-output "" | out-file -Encoding Default C:\SISSync\UpdateSIS.txt
+
+foreach  ($exportstudent in $exportstudents) {
+	$exportsamname = $exportstudent.sAMAccountName
+	$exportsamname = [Text.Encoding]::ASCII.GetString([Text.Encoding]::GetEncoding("Cyrillic").GetBytes($exportsamname))
+	$exportstudentid = $exportstudent.employeeID
+	$exportmail = $exportstudent.mail
+	write-output "$exportstudentid`t$exportsamname`t1`t1" | out-file  -Encoding Default -append C:\SISSync\UpdateSIS.txt
+}
+
