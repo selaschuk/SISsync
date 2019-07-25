@@ -15,6 +15,5 @@ These scripts also do not attempt to delete or remove any old users/data folders
 
 SISsync.ps1 - PowerShell script for creating/updating users
 
-SISsync.sql - Sample SQLPlus script for creating tab delimited export file from PowerSchool
+SISsync.sql - Sample SQLPlus script for creating tab delimited export file from PowerSchool. This will also generate a file called UpdateSIS.txt which can be imported by a powerschool AutoComm job similar to this: https://i.imgur.com/M32MpYI.png
 
-updatePowerSchool.ps1 - PowerShell script for creating a SQLPlus script for updating attributes in PowerSchool
